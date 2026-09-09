@@ -36,12 +36,12 @@ type RequestState struct {
 	Usage      llm.Usage      `json:"usage"`        // 请求结束时写入的展示用量。
 	Cost       float64        `json:"cost"`         // 请求结束时写入的累计费用。
 
-	Round          int            `json:"round"`           // 最新一轮循环的递增序号, 人工中止按此匹配以免误杀下一轮。
-	TargetChannel  string         `json:"target_channel"`  // 最新一轮选中的渠道名称。
-	TargetModel    string         `json:"target_model"`    // 最新一轮实际请求上游的模型名称。
-	TargetProtocol model.Protocol `json:"target_protocol"` // 最新一轮实际请求上游的协议, 与 Protocol 不同即本轮做了跨协议转换; 0 表示尚未选出。
-	Sending        bool           `json:"sending"`         // 最新一轮是否仍在等待上游响应。
-	Error          string         `json:"error,omitempty"` // 最新一轮的失败原因, 请求结束后即为最终错误。
+	Round          int            `json:"round"`            // 最新一轮循环的递增序号, 人工中止按此匹配以免误杀下一轮。
+	TargetChannel  string         `json:"target_channel"`   // 最新一轮选中的渠道名称。
+	TargetModel    string         `json:"target_model"`     // 最新一轮实际请求上游的模型名称。
+	TargetProtocol model.Protocol `json:"target_protocol"`  // 最新一轮实际请求上游的协议, 与 Protocol 不同即本轮做了跨协议转换; 0 表示尚未选出。
+	Sending        bool           `json:"sending"`          // 最新一轮是否仍在等待上游响应。
+	Error          string         `json:"error,omitempty"`  // 最新一轮的失败原因, 请求结束后即为最终错误。
 
 	body         string             // 客户端原始请求体, 体积大故不进状态流, 由独立接口按需拉取。
 	responseBody string             // 聚合后的完整最终响应体, 同样按需拉取。
@@ -53,8 +53,8 @@ const streamBuffer = 16 // 单个状态流连接的非阻塞消息缓冲容量�
 const maxFinished = 50  // 进程内最多保留的已结束请求数量。
 
 var (
-	idSeq    atomic.Uint64                          // 进程内严格递增的请求 ID。
-	mu       sync.Mutex                             // 全部共享状态的互斥锁。
+	idSeq    atomic.Uint64                     // 进程内严格递增的请求 ID。
+	mu       sync.Mutex                        // 全部共享状态的互斥锁。
 	requests = make(map[uint64]*RequestState)       // 按请求 ID 保存的全部请求状态。
 	watchers = make(map[chan RequestState]struct{}) // 全部状态流 SSE 连接。
 )
