@@ -1,9 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { apiRequest } from './client';
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { apiRequest } from "./client";
 
 // RequestState 表示 Relay 请求的实时状态。
-export type RequestState = 'running' | 'committed' | 'success' | 'failed' | 'canceled';
+export type RequestState =
+    | "running"
+    | "committed"
+    | "success"
+    | "failed"
+    | "canceled";
 
 // RelayUsage 保存请求结束后确认的统一 Token 用量。
 export interface RelayUsage {
@@ -40,15 +45,24 @@ export interface RelayLogOverview {
 // useClearLogs 清空已完成的内存日志。
 export function useClearLogs() {
     return useMutation({
-        mutationFn: () => apiRequest<null>('/api/v1/log/clear', { method: 'DELETE' }),
+        mutationFn: () =>
+            apiRequest<null>("/api/v1/log/clear", { method: "DELETE" }),
     });
 }
 
 // useStopRound 中止指定请求当前轮次匹配的上游调用。
 export function useStopRound() {
     return useMutation({
-        mutationFn: ({ requestId, round }: { requestId: number; round: number }) =>
-            apiRequest<null>(`/api/v1/log/${requestId}/${round}/stop`, { method: 'POST' }),
+        mutationFn: ({
+            requestId,
+            round,
+        }: {
+            requestId: number;
+            round: number;
+        }) =>
+            apiRequest<null>(`/api/v1/log/${requestId}/${round}/stop`, {
+                method: "POST",
+            }),
     });
 }
 
@@ -59,18 +73,22 @@ export function useLogs() {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        const source = new EventSource('/api/v1/log/overview/stream', { withCredentials: true });
+        const source = new EventSource("/api/v1/log/overview/stream", {
+            withCredentials: true,
+        });
 
         source.onopen = () => {
             setError(null);
             setIsLoading(false);
         };
-        source.addEventListener('log', (event) => {
+        source.addEventListener("log", (event) => {
             let next: RelayLogOverview;
             try {
-                next = JSON.parse((event as MessageEvent<string>).data) as RelayLogOverview;
+                next = JSON.parse(
+                    (event as MessageEvent<string>).data,
+                ) as RelayLogOverview;
             } catch {
-                setError(new Error('Invalid log update'));
+                setError(new Error("Invalid log update"));
                 return;
             }
             setIsLoading(false);
@@ -86,12 +104,16 @@ export function useLogs() {
                 }
                 const position = current.findIndex((item) => item.id < next.id);
                 if (position < 0) return [...current, next];
-                return [...current.slice(0, position), next, ...current.slice(position)];
+                return [
+                    ...current.slice(0, position),
+                    next,
+                    ...current.slice(position),
+                ];
             });
         });
         source.onerror = () => {
             setIsLoading(false);
-            setError(new Error('Log stream disconnected'));
+            setError(new Error("Log stream disconnected"));
         };
 
         return () => {
@@ -103,9 +125,13 @@ export function useLogs() {
 }
 
 // useLogRequestBody 在调用方启用时按需获取指定日志的请求体。
-export function useLogRequestBody(id: number, startedAt: string, enabled: boolean) {
+export function useLogRequestBody(
+    id: number,
+    startedAt: string,
+    enabled: boolean,
+) {
     return useQuery({
-        queryKey: ['logs', id, startedAt, 'request-body'],
+        queryKey: ["logs", id, startedAt, "request-body"],
         queryFn: () => apiRequest<string>(`/api/v1/log/${id}/request-body`),
         enabled,
         staleTime: Infinity,
@@ -113,9 +139,13 @@ export function useLogRequestBody(id: number, startedAt: string, enabled: boolea
 }
 
 // useLogResponseBody 在调用方启用时获取指定日志的最终响应体。
-export function useLogResponseBody(id: number, startedAt: string, enabled: boolean) {
+export function useLogResponseBody(
+    id: number,
+    startedAt: string,
+    enabled: boolean,
+) {
     return useQuery({
-        queryKey: ['logs', id, startedAt, 'response-body'],
+        queryKey: ["logs", id, startedAt, "response-body"],
         queryFn: () => apiRequest<string>(`/api/v1/log/${id}/response-body`),
         enabled,
         staleTime: Infinity,

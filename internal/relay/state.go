@@ -25,24 +25,24 @@ const (
 
 // 客户端请求的完整进程内状态, 同时作为状态流的消息形状; 上半部分在请求到达时写入并在结束时定稿, 下半部分每轮循环覆盖。
 type RequestState struct {
-	ID        uint64         `json:"id"`         // 请求在当前进程内的唯一标识。
-	Status    Status         `json:"status"`     // 请求当前状态。
-	StartedAt time.Time      `json:"started_at"` // 请求到达时间。
-	Duration  time.Duration  `json:"duration"`   // 请求总耗时, 未结束时为零。
-	Model      string         `json:"model"`       // 客户端请求的模型名称, 即分组名称。
-	Protocol   model.Protocol `json:"protocol"`    // 客户端请求使用的协议, 由入站格式定出, 单个协议位而非掩码组合。
-	GroupID    int            `json:"group_id"`    // 承载本请求的分组 ID, 供界面按主键直接定位分组而不必按名称回查。
+	ID         uint64         `json:"id"`           // 请求在当前进程内的唯一标识。
+	Status     Status         `json:"status"`       // 请求当前状态。
+	StartedAt  time.Time      `json:"started_at"`   // 请求到达时间。
+	Duration   time.Duration  `json:"duration"`     // 请求总耗时, 未结束时为零。
+	Model      string         `json:"model"`        // 客户端请求的模型名称, 即分组名称。
+	Protocol   model.Protocol `json:"protocol"`     // 客户端请求使用的协议, 由入站格式定出, 单个协议位而非掩码组合。
+	GroupID    int            `json:"group_id"`     // 承载本请求的分组 ID, 供界面按主键直接定位分组而不必按名称回查。
 	APIKeyID   int            `json:"api_key_id"`   // 发起请求的 API Key ID, 用于请求完成后的归属统计。
 	APIKeyName string         `json:"api_key_name"` // 发起请求的 API Key 名称, 供界面区分请求来源; 密钥明文绝不进入日志。
-	Usage     llm.Usage      `json:"usage"`      // 请求结束时写入的展示用量。
-	Cost      float64        `json:"cost"`       // 请求结束时写入的累计费用。
+	Usage      llm.Usage      `json:"usage"`        // 请求结束时写入的展示用量。
+	Cost       float64        `json:"cost"`         // 请求结束时写入的累计费用。
 
-	Round          int            `json:"round"`            // 最新一轮循环的递增序号, 人工中止按此匹配以免误杀下一轮。
-	TargetChannel  string         `json:"target_channel"`   // 最新一轮选中的渠道名称。
-	TargetModel    string         `json:"target_model"`     // 最新一轮实际请求上游的模型名称。
-	TargetProtocol model.Protocol `json:"target_protocol"`  // 最新一轮实际请求上游的协议, 与 Protocol 不同即本轮做了跨协议转换; 0 表示尚未选出。
-	Sending        bool           `json:"sending"`          // 最新一轮是否仍在等待上游响应。
-	Error          string         `json:"error,omitempty"`  // 最新一轮的失败原因, 请求结束后即为最终错误。
+	Round          int            `json:"round"`           // 最新一轮循环的递增序号, 人工中止按此匹配以免误杀下一轮。
+	TargetChannel  string         `json:"target_channel"`  // 最新一轮选中的渠道名称。
+	TargetModel    string         `json:"target_model"`    // 最新一轮实际请求上游的模型名称。
+	TargetProtocol model.Protocol `json:"target_protocol"` // 最新一轮实际请求上游的协议, 与 Protocol 不同即本轮做了跨协议转换; 0 表示尚未选出。
+	Sending        bool           `json:"sending"`         // 最新一轮是否仍在等待上游响应。
+	Error          string         `json:"error,omitempty"` // 最新一轮的失败原因, 请求结束后即为最终错误。
 
 	body         string             // 客户端原始请求体, 体积大故不进状态流, 由独立接口按需拉取。
 	responseBody string             // 聚合后的完整最终响应体, 同样按需拉取。
@@ -53,8 +53,8 @@ const streamBuffer = 16 // 单个状态流连接的非阻塞消息缓冲容量�
 const maxFinished = 50  // 进程内最多保留的已结束请求数量。
 
 var (
-	idSeq    atomic.Uint64                     // 进程内严格递增的请求 ID。
-	mu       sync.Mutex                        // 全部共享状态的互斥锁。
+	idSeq    atomic.Uint64                          // 进程内严格递增的请求 ID。
+	mu       sync.Mutex                             // 全部共享状态的互斥锁。
 	requests = make(map[uint64]*RequestState)       // 按请求 ID 保存的全部请求状态。
 	watchers = make(map[chan RequestState]struct{}) // 全部状态流 SSE 连接。
 )

@@ -1,19 +1,23 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { Layers, GripVertical, X, Trash2 } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from "react";
+import { Layers, GripVertical, X, Trash2 } from "lucide-react";
 import {
     DragDropContext,
     Draggable,
     Droppable,
     type DraggableProvided,
     type DropResult,
-} from '@hello-pangea/dnd';
-import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '@/lib/utils';
-import { getModelIcon } from '@/lib/model-icons';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useTranslations } from 'use-intl';
-import type { Group } from '@/api/group';
-import { MemberStatus } from './MemberStatus';
+} from "@hello-pangea/dnd";
+import { motion, AnimatePresence } from "motion/react";
+import { cn } from "@/lib/utils";
+import { getModelIcon } from "@/lib/model-icons";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useTranslations } from "use-intl";
+import type { Group } from "@/api/group";
+import { MemberStatus } from "./MemberStatus";
 
 export interface SelectedMember {
     id: string;
@@ -35,9 +39,9 @@ function reorderList<T>(list: T[], startIndex: number, endIndex: number): T[] {
 }
 
 type MemberItemDnd = {
-    innerRef: DraggableProvided['innerRef'];
-    draggableProps: DraggableProvided['draggableProps'];
-    dragHandleProps: DraggableProvided['dragHandleProps'];
+    innerRef: DraggableProvided["innerRef"];
+    draggableProps: DraggableProvided["draggableProps"];
+    dragHandleProps: DraggableProvided["dragHandleProps"];
     isDragging: boolean;
 };
 
@@ -65,7 +69,6 @@ function MemberItem({
     layoutScope?: string;
     dnd: MemberItemDnd;
 }) {
-    const t = useTranslations('group');
     const { Icon, className: iconClassName } = getModelIcon(member.name);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const isDisabled = member.enabled === false;
@@ -78,36 +81,58 @@ function MemberItem({
             ref={dnd.innerRef}
             // eslint-disable-next-line react-hooks/refs
             {...dnd.draggableProps}
-            className={cn('rounded-lg grid transition-[grid-template-rows] duration-200', isRemoving ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]')}
+            className={cn(
+                "rounded-lg grid transition-[grid-template-rows] duration-200",
+                isRemoving ? "grid-rows-[0fr]" : "grid-rows-[1fr]",
+            )}
             // eslint-disable-next-line react-hooks/refs
             style={{
                 /* eslint-disable-next-line react-hooks/refs */
                 ...(dnd.draggableProps?.style ?? {}),
                 /* eslint-disable-next-line react-hooks/refs */
-                ...(dnd.isDragging ? { zIndex: 50, boxShadow: '0 8px 32px rgba(0,0,0,0.15)' } : null),
+                ...(dnd.isDragging
+                    ? { zIndex: 50, boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }
+                    : null),
             }}
         >
-            <div className={cn(
-                'flex items-center gap-2 rounded-lg bg-background px-2.5 py-2 select-none transition-[background-color,opacity] duration-200 relative overflow-hidden',
-                isRemoving && 'opacity-0',
-                isDisabled && 'opacity-60 grayscale',
-                onActivate && member.item_id !== undefined && 'cursor-pointer'
-            )}
-                onClick={() => member.item_id !== undefined && onActivate?.(member.item_id)}
+            <div
+                className={cn(
+                    "flex items-center gap-2 rounded-lg bg-background px-2.5 py-2 select-none transition-[background-color,opacity] duration-200 relative overflow-hidden",
+                    isRemoving && "opacity-0",
+                    isDisabled && "opacity-60 grayscale",
+                    onActivate &&
+                        member.item_id !== undefined &&
+                        "cursor-pointer",
+                )}
+                onClick={() =>
+                    member.item_id !== undefined && onActivate?.(member.item_id)
+                }
                 onKeyDown={(event) => {
-                    if (event.target !== event.currentTarget || member.item_id === undefined || !onActivate || (event.key !== 'Enter' && event.key !== ' ')) return;
+                    if (
+                        event.target !== event.currentTarget ||
+                        member.item_id === undefined ||
+                        !onActivate ||
+                        (event.key !== "Enter" && event.key !== " ")
+                    )
+                        return;
                     event.preventDefault();
                     onActivate(member.item_id);
                 }}
-                role={onActivate && member.item_id !== undefined ? 'button' : undefined}
-                tabIndex={onActivate && member.item_id !== undefined ? 0 : undefined}
+                role={
+                    onActivate && member.item_id !== undefined
+                        ? "button"
+                        : undefined
+                }
+                tabIndex={
+                    onActivate && member.item_id !== undefined ? 0 : undefined
+                }
             >
                 <div
                     className={cn(
-                        'p-0.5 rounded touch-none transition-colors',
+                        "p-0.5 rounded touch-none transition-colors",
                         isDisabled
-                            ? 'cursor-grab active:cursor-grabbing hover:bg-muted/60'
-                            : 'cursor-grab active:cursor-grabbing hover:bg-muted'
+                            ? "cursor-grab active:cursor-grabbing hover:bg-muted/60"
+                            : "cursor-grab active:cursor-grabbing hover:bg-muted",
                     )}
                     // eslint-disable-next-line react-hooks/refs
                     {...dnd.dragHandleProps}
@@ -116,34 +141,56 @@ function MemberItem({
                     <GripVertical className="size-3.5 text-muted-foreground" />
                 </div>
 
-                <span className={cn(isDisabled && 'opacity-70')}>
-                    <Icon aria-hidden="true" className={iconClassName} width={18} height={18} />
+                <span className={cn(isDisabled && "opacity-70")}>
+                    <Icon
+                        aria-hidden="true"
+                        className={iconClassName}
+                        width={18}
+                        height={18}
+                    />
                 </span>
 
                 <div className="flex flex-col min-w-0 flex-1">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <span className={cn(
-                                'w-fit max-w-full text-sm font-medium truncate leading-tight',
-                                isDisabled && 'text-muted-foreground'
-                            )}>
+                            <span
+                                className={cn(
+                                    "w-fit max-w-full text-sm font-medium truncate leading-tight",
+                                    isDisabled && "text-muted-foreground",
+                                )}
+                            >
                                 {member.name}
                             </span>
                         </TooltipTrigger>
-                        <TooltipContent key={member.name} side="top" sideOffset={10} align="center">
+                        <TooltipContent
+                            key={member.name}
+                            side="top"
+                            sideOffset={10}
+                            align="center"
+                        >
                             {member.name}
                         </TooltipContent>
                     </Tooltip>
                     <span className="text-[10px] text-muted-foreground truncate leading-tight">
-                        {member.key_name ? `${member.channel_name} · ${member.key_name}` : member.channel_name}
+                        {member.key_name
+                            ? `${member.channel_name} · ${member.key_name}`
+                            : member.channel_name}
                     </span>
                 </div>
 
-                {group && <MemberStatus group={group} itemId={member.item_id} now={now} active={isActive} activeClassName="p-1" />}
+                {group && (
+                    <MemberStatus
+                        group={group}
+                        itemId={member.item_id}
+                        now={now}
+                        active={isActive}
+                        activeClassName="p-1"
+                    />
+                )}
 
                 {(!showConfirmDelete || !confirmDelete) && (
                     <motion.button
-                        layoutId={`delete-btn-member-${layoutScope ?? 'default'}-${member.id}`}
+                        layoutId={`delete-btn-member-${layoutScope ?? "default"}-${member.id}`}
                         type="button"
                         onClick={(event) => {
                             event.stopPropagation();
@@ -152,7 +199,7 @@ function MemberItem({
                         }}
                         className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
                         transition={{ duration: 0.15 }}
-                        style={{ pointerEvents: 'auto' }}
+                        style={{ pointerEvents: "auto" }}
                     >
                         <X className="size-3" />
                     </motion.button>
@@ -161,10 +208,14 @@ function MemberItem({
                 <AnimatePresence>
                     {showConfirmDelete && confirmDelete && (
                         <motion.div
-                            layoutId={`delete-btn-member-${layoutScope ?? 'default'}-${member.id}`}
+                            layoutId={`delete-btn-member-${layoutScope ?? "default"}-${member.id}`}
                             className="absolute inset-0 flex items-center justify-center gap-2 bg-destructive p-1.5 rounded-lg"
                             onClick={(event) => event.stopPropagation()}
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 30,
+                            }}
                         >
                             <button
                                 type="button"
@@ -252,7 +303,7 @@ export function MemberList({
 
     const visibleCount = members.filter((m) => !removingIds.has(m.id)).length;
     const isEmpty = visibleCount === 0;
-    const t = useTranslations('group');
+    const t = useTranslations("group");
 
     useEffect(() => {
         // Skip the initial mount so we don't auto-scroll on first render / initial data load.
@@ -275,7 +326,7 @@ export function MemberList({
             requestAnimationFrame(() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;
-                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+                el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
             });
         }
 
@@ -301,19 +352,19 @@ export function MemberList({
         <div className="relative h-full min-h-0">
             <div
                 className={cn(
-                    'absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground',
-                    'transition-opacity duration-200 ease-out',
-                    isEmpty ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    "absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground",
+                    "transition-opacity duration-200 ease-out",
+                    isEmpty ? "opacity-100" : "opacity-0 pointer-events-none",
                 )}
             >
                 <Layers className="size-10 opacity-40" />
-                <span className="text-sm">{t('card.empty')}</span>
+                <span className="text-sm">{t("card.empty")}</span>
             </div>
 
             <div
                 className={cn(
-                    'h-full overflow-y-auto transition-opacity duration-200',
-                    isEmpty ? 'opacity-0' : 'opacity-100'
+                    "h-full overflow-y-auto transition-opacity duration-200",
+                    isEmpty ? "opacity-0" : "opacity-100",
                 )}
                 ref={scrollContainerRef}
             >
@@ -328,7 +379,10 @@ export function MemberList({
                                 member={members[rubric.source.index]}
                                 onRemove={onRemove}
                                 onActivate={onActivate}
-                                isActive={members[rubric.source.index].item_id === activeItemId}
+                                isActive={
+                                    members[rubric.source.index].item_id ===
+                                    activeItemId
+                                }
                                 group={group}
                                 now={now}
                                 isRemoving={false}
@@ -336,8 +390,10 @@ export function MemberList({
                                 layoutScope={layoutScope}
                                 dnd={{
                                     innerRef: draggableProvided.innerRef,
-                                    draggableProps: draggableProvided.draggableProps,
-                                    dragHandleProps: draggableProvided.dragHandleProps,
+                                    draggableProps:
+                                        draggableProvided.draggableProps,
+                                    dragHandleProps:
+                                        draggableProvided.dragHandleProps,
                                     isDragging: snapshot.isDragging,
                                 }}
                             />
@@ -354,24 +410,37 @@ export function MemberList({
                                         key={member.id}
                                         draggableId={member.id}
                                         index={index}
-                                        isDragDisabled={removingIds.has(member.id)}
+                                        isDragDisabled={removingIds.has(
+                                            member.id,
+                                        )}
                                     >
                                         {(draggableProvided, snapshot) => (
                                             <MemberItem
                                                 member={member}
                                                 onRemove={onRemove}
                                                 onActivate={onActivate}
-                                                isActive={member.item_id === activeItemId}
+                                                isActive={
+                                                    member.item_id ===
+                                                    activeItemId
+                                                }
                                                 group={group}
                                                 now={now}
-                                                isRemoving={removingIds.has(member.id)}
-                                                showConfirmDelete={showConfirmDelete}
+                                                isRemoving={removingIds.has(
+                                                    member.id,
+                                                )}
+                                                showConfirmDelete={
+                                                    showConfirmDelete
+                                                }
                                                 layoutScope={layoutScope}
                                                 dnd={{
-                                                    innerRef: draggableProvided.innerRef,
-                                                    draggableProps: draggableProvided.draggableProps,
-                                                    dragHandleProps: draggableProvided.dragHandleProps,
-                                                    isDragging: snapshot.isDragging,
+                                                    innerRef:
+                                                        draggableProvided.innerRef,
+                                                    draggableProps:
+                                                        draggableProvided.draggableProps,
+                                                    dragHandleProps:
+                                                        draggableProvided.dragHandleProps,
+                                                    isDragging:
+                                                        snapshot.isDragging,
                                                 }}
                                             />
                                         )}
