@@ -32,8 +32,7 @@ type RequestState struct {
 	Model      string         `json:"model"`        // 客户端请求的模型名称, 即分组名称。
 	Protocol   model.Protocol `json:"protocol"`     // 客户端请求使用的协议, 由入站格式定出, 单个协议位而非掩码组合。
 	GroupID    int            `json:"group_id"`     // 承载本请求的分组 ID, 供界面按主键直接定位分组而不必按名称回查。
-	APIKeyID   int            `json:"api_key_id"`   // 发起请求的 API Key ID, 用于请求完成后的归属统计。
-	APIKeyName string         `json:"api_key_name"` // 发起请求的 API Key 名称, 供界面区分请求来源; 密钥明文绝不进入日志。
+	APIKeyName string         `json:"api_key_name"` // 发起请求时的 API Key 名称。
 	Usage      llm.Usage      `json:"usage"`        // 请求结束时写入的展示用量。
 	Cost       float64        `json:"cost"`         // 请求结束时写入的累计费用。
 
@@ -46,6 +45,7 @@ type RequestState struct {
 
 	body         string             // 客户端原始请求体, 体积大故不进状态流, 由独立接口按需拉取。
 	responseBody string             // 聚合后的完整最终响应体, 同样按需拉取。
+	apiKeyID     int                // 发起请求的 API Key ID, 用于请求完成后的归属统计。
 	cancel       context.CancelFunc // 中止最新一轮上游请求, 仅在该轮等待响应期间非空。
 }
 
@@ -59,7 +59,7 @@ var (
 	watchers = make(map[chan RequestState]struct{}) // 全部状态流 SSE 连接。
 )
 
-// newRequestState 分配请求 ID 并登记初始运行状态; ctx 用于查询 API Key 名称, 返回的记录是本请求后续全部状态写入的入口。
+// newRequestState 分配请求 ID 并登记初始运行状态; 返回的记录是本请求后续全部状态写入的入口。
 func newRequestState(ctx context.Context, modelName string, groupID int, protocol model.Protocol, body string, apiKeyID int) *RequestState {
 	mu.Lock()
 	defer mu.Unlock()
@@ -72,9 +72,9 @@ func newRequestState(ctx context.Context, modelName string, groupID int, protoco
 		Protocol:  protocol,
 		GroupID:   groupID,
 		body:      body,
-		APIKeyID:  apiKeyID,
+		apiKeyID:  apiKeyID,
 	}
-	// API Key 名称是纯内存缓存查询, 密钥已删除等取不到时留空, 界面按 '-' 展示。
+	// 登记时保存名称快照, 查询失败时留空。
 	if apiKey, err := op.APIKeyGet(apiKeyID, ctx); err == nil {
 		request.APIKeyName = apiKey.Name
 	}
@@ -201,8 +201,8 @@ func (r *RequestState) finishLocked(usage *llm.Usage) {
 	_ = op.StatsTotalUpdate(metrics)
 	_ = op.StatsHourlyUpdate(metrics)
 	_ = op.StatsDailyUpdate(context.Background(), metrics)
-	if r.APIKeyID > 0 {
-		_ = op.StatsAPIKeyUpdate(r.APIKeyID, metrics)
+	if r.apiKeyID > 0 {
+		_ = op.StatsAPIKeyUpdate(r.apiKeyID, metrics)
 	}
 	publishRequestLocked(r)
 

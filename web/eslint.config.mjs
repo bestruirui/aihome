@@ -20,23 +20,17 @@ export default defineConfig([
     },
     rules: {
       // 变体样式、共享 store 与组件同文件导出是既有约定，这些导出不参与 Fast Refresh 组件替换。
-      'react-refresh/only-export-components': [
-        'error',
-        {
-          allowExportNames: [
-            // Recharts 组件别名不包含本地状态, 但规则无法识别属性引用。
-            'ChartTooltip',
-            'ChartLegend',
-            'badgeVariants',
-            'buttonVariants',
-            'tabsListVariants',
-            'useMorphingDialog',
-            'usePageActionsStore',
-            'useRuntimeClock',
-            'useTheme',
-          ],
-        },
-      ],
+      'react-refresh/only-export-components': ['error', {
+        allowExportNames: [
+          'badgeVariants',
+          'buttonVariants',
+          'tabsListVariants',
+          'useMorphingDialog',
+          'usePageActionsStore',
+          'useRuntimeClock',
+          'useTheme',
+        ],
+      }],
     },
   },
 ]);
