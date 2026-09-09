@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { AlertCircle, ArrowDownToLine, ArrowRight, ArrowUpFromLine, Clock, Cpu, Database, DollarSign, Loader2, Square } from 'lucide-react';
+import { AlertCircle, ArrowDownToLine, ArrowRight, ArrowUpFromLine, Clock, Cpu, Database, DollarSign, KeyRound, Loader2, Square } from 'lucide-react';
 import { useTranslations } from 'use-intl';
 import JsonView from '@uiw/react-json-view';
 import { githubDarkTheme } from '@uiw/react-json-view/githubDark';
@@ -194,6 +194,10 @@ function LogDetail({ log, now }: { log: RelayLogOverview; now: number }) {
                 >
                     {log.target_channel || '-'}
                 </Badge>
+                <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground/70" title={log.api_key_name}>
+                    <KeyRound className="size-3 shrink-0 text-orange-500" />
+                    <span className="truncate">{log.api_key_name || '-'}</span>
+                </span>
                 <span className="text-muted-foreground">{actualModel}</span>
             </MorphingDialogTitle>
 
@@ -441,6 +445,10 @@ function LogCardBody({ log }: { log: RelayLogOverview }) {
                             >
                                 {log.target_channel || '-'}
                             </Badge>
+                            <span className="flex min-w-0 items-center gap-1 shrink-0 text-xs text-muted-foreground/70" title={log.api_key_name}>
+                                <KeyRound className="size-3 shrink-0 text-orange-500" />
+                                <span className="max-w-24 truncate">{log.api_key_name || '-'}</span>
+                            </span>
                             <span className="text-muted-foreground truncate">
                                 {actualModel}
                             </span>

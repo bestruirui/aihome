@@ -25,6 +25,8 @@ export interface RelayLogOverview {
     model: string;
     protocol: number;
     group_id: number;
+    api_key_id: number;
+    api_key_name?: string; // 发起请求的 API Key 名称, 密钥已删除时为空, 界面按 '-' 展示。
     usage: RelayUsage;
     cost: number;
     round: number;
