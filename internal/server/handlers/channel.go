@@ -246,12 +246,44 @@ func fetchModel(c *gin.Context) {
 		return
 	}
 
-	var re *regexp2.Regexp
+	var re, reGlobal *regexp2.Regexp
 	if target.MatchRegex != "" {
 		if re, err = regexp2.Compile(target.MatchRegex, regexp2.ECMAScript); err != nil {
 			resp.Error(c, http.StatusBadRequest, err.Error())
 			return
 		}
+	}
+	// 全局过滤由设置页维护, 与渠道过滤同取 AND: 模型须同时通过两枚正则才保留, 留空的一侧不生效。
+	// 设置缺失按不过滤处理: 启动初始化会补齐默认值, 缺行只可能出现在旧库尚未刷新的瞬间。
+	globalFilter, _ := op.SettingGetString(model.SettingKeyModelFilter)
+	if globalFilter != "" {
+		if reGlobal, err = regexp2.Compile(globalFilter, regexp2.ECMAScript); err != nil {
+			resp.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
+	// 模型名须同时通过渠道与全局两枚过滤正则, 编译与匹配错误统一按请求错误返回。
+	matches := func(name string) (bool, error) {
+		if re != nil {
+			matched, err := re.MatchString(name)
+			if err != nil {
+				return false, err
+			}
+			if !matched {
+				return false, nil
+			}
+		}
+		if reGlobal != nil {
+			matched, err := reGlobal.MatchString(name)
+			if err != nil {
+				return false, err
+			}
+			if !matched {
+				return false, nil
+			}
+		}
+		return true, nil
 	}
 
 	// 两侧结果按名称合并成一份有序集合: 同名模型在两侧都出现时, 协议位取并集。
@@ -260,15 +292,13 @@ func fetchModel(c *gin.Context) {
 	protocolsByModel := make(map[string]model.Protocol, len(openaiModels)+len(anthropicModels))
 	order := make([]string, 0, len(openaiModels)+len(anthropicModels))
 	for _, name := range openaiModels {
-		if re != nil {
-			matched, err := re.MatchString(name)
-			if err != nil {
-				resp.Error(c, http.StatusBadRequest, err.Error())
-				return
-			}
-			if !matched {
-				continue
-			}
+		matched, err := matches(name)
+		if err != nil {
+			resp.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		if !matched {
+			continue
 		}
 		if _, ok := protocolsByModel[name]; !ok {
 			order = append(order, name)
@@ -276,15 +306,13 @@ func fetchModel(c *gin.Context) {
 		protocolsByModel[name] |= model.ProtocolOpenAIResponse
 	}
 	for _, name := range anthropicModels {
-		if re != nil {
-			matched, err := re.MatchString(name)
-			if err != nil {
-				resp.Error(c, http.StatusBadRequest, err.Error())
-				return
-			}
-			if !matched {
-				continue
-			}
+		matched, err := matches(name)
+		if err != nil {
+			resp.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		if !matched {
+			continue
 		}
 		if _, ok := protocolsByModel[name]; !ok {
 			order = append(order, name)

@@ -158,6 +158,11 @@
             "hint": "为空禁止跨域，* 允许所有",
             "example": "只允许指定域名: https://example.com,https://example2.com"
         },
+        "modelFilter": {
+            "label": "全局模型过滤",
+            "placeholder": "请输入过滤表达式",
+            "hint": "渠道获取模型时与渠道自身的过滤表达式同时生效（AND），留空不过滤"
+        },
         "saved": "已保存",
         "backup": {
             "title": "备份 / 恢复",

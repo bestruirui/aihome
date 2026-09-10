@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'use-intl';
-import { Monitor, Globe, Clock, Shield, HelpCircle, X } from 'lucide-react';
+import { Monitor, Globe, Clock, Shield, Filter, HelpCircle, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSettingList, useSetSetting, SettingKey } from '@/api/setting';
@@ -16,16 +16,19 @@ export function SettingSystem() {
     const [statsSaveInterval, setStatsSaveInterval] = useState('');
     const [corsAllowOrigins, setCorsAllowOrigins] = useState('');
     const [corsInputValue, setCorsInputValue] = useState('');
+    const [modelFilter, setModelFilter] = useState('');
 
     const initialProxyUrl = useRef('');
     const initialStatsSaveInterval = useRef('');
     const initialCorsAllowOrigins = useRef('');
+    const initialModelFilter = useRef('');
 
     useEffect(() => {
         if (settings) {
             const proxy = settings.find(s => s.key === SettingKey.ProxyURL);
             const interval = settings.find(s => s.key === SettingKey.StatsSaveInterval);
             const cors = settings.find(s => s.key === SettingKey.CORSAllowOrigins);
+            const modelFilterSetting = settings.find(s => s.key === SettingKey.ModelFilter);
             if (proxy) {
                 queueMicrotask(() => setProxyUrl(proxy.value));
                 initialProxyUrl.current = proxy.value;
@@ -37,6 +40,10 @@ export function SettingSystem() {
             if (cors) {
                 queueMicrotask(() => setCorsAllowOrigins(cors.value));
                 initialCorsAllowOrigins.current = cors.value;
+            }
+            if (modelFilterSetting) {
+                queueMicrotask(() => setModelFilter(modelFilterSetting.value));
+                initialModelFilter.current = modelFilterSetting.value;
             }
         }
     }, [settings]);
@@ -53,6 +60,8 @@ export function SettingSystem() {
                     initialStatsSaveInterval.current = value;
                 } else if (key === SettingKey.CORSAllowOrigins) {
                     initialCorsAllowOrigins.current = value;
+                } else if (key === SettingKey.ModelFilter) {
+                    initialModelFilter.current = value;
                 }
             }
         });
@@ -146,6 +155,29 @@ export function SettingSystem() {
                     onChange={(e) => setStatsSaveInterval(e.target.value)}
                     onBlur={() => handleSave('stats_save_interval', statsSaveInterval, initialStatsSaveInterval.current)}
                     placeholder={t('statsSaveInterval.placeholder')}
+                    className="w-48 rounded-xl"
+                />
+            </div>
+
+            {/* 全局模型过滤 */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <Filter className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">{t('modelFilter.label')}</span>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={10} align="center">
+                            {t('modelFilter.hint')}
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+                <Input
+                    value={modelFilter}
+                    onChange={(e) => setModelFilter(e.target.value)}
+                    onBlur={() => handleSave('model_filter', modelFilter, initialModelFilter.current)}
+                    placeholder={t('modelFilter.placeholder')}
                     className="w-48 rounded-xl"
                 />
             </div>
